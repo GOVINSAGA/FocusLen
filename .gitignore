@@ -1,0 +1,15 @@
+# .NET Core
+bin/
+obj/
+*.db
+*.db-shm
+*.db-wal
+appsettings.Development.json
+
+# IDE / Editor
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+node_modules/

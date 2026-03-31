@@ -1,0 +1,79 @@
+# FocusTrack – Phase 1 Walkthrough
+
+## What Was Built
+
+### Backend: `FocusTrack.Api` (.NET 10)
+
+| File | Purpose |
+|------|---------|
+| `Models/User.cs` | Entity: Id, Email, PasswordHash, CreatedAt |
+| `Models/Session.cs` | Entity: Id, UserId, AppName, WindowTitle, StartTime, EndTime, IsBrowser |
+| `Data/FocusDbContext.cs` | EF Core DbContext with unique email index and timestamp indexes |
+| `DTOs/RegisterDto.cs` | Input DTO with `[Required]` + `[EmailAddress]` annotations |
+| `DTOs/LoginDto.cs` | Input DTO |
+| `DTOs/AuthResponseDto.cs` | Output: Token, ExpiresAt, Email |
+| `Services/AuthService.cs` | RegisterAsync + LoginAsync with BCrypt hashing, ILogger |
+| `Controllers/AuthController.cs` | POST /api/auth/register, POST /api/auth/login |
+| `Controllers/TestController.cs` | GET /api/test/protected — `[Authorize]` acceptance endpoint |
+| `Middleware/GlobalExceptionHandlerMiddleware.cs` | Catches all unhandled exceptions, returns `{error, statusCode}` |
+| `Program.cs` | Full pipeline: DbContext, JWT Bearer, CORS, OpenAPI, EnsureCreated |
+| `appsettings.Development.json` | SQLite connection, JWT config, CORS allowed origins |
+
+**Key design decisions:**
+- JWT key read from `Jwt:Key` config — never hardcoded
+- `db.Database.EnsureCreated()` on startup → SQLite DB auto-created at `focustrack.db`
+- Native .NET 10 `AddOpenApi()` used (avoids Swashbuckle version conflicts)
+- `FocusTrackCors` policy allows `http://localhost:4200`
+
+---
+
+### Frontend: `focus-track-ui` (Angular 20 Standalone)
+
+| File | Purpose |
+|------|---------|
+| `core/auth/auth.ts` | AuthService: register(), login(), logout(), getToken() |
+| `core/interceptors/auth.interceptor.ts` | Functional interceptor: attaches Bearer token, handles 4xx/5xx errors |
+| `features/auth/login/` | Login component (TypeScript + HTML + SCSS) |
+| `features/auth/register/` | Register component with confirm-password validation |
+| `app.routes.ts` | `/login` → Login, `/register` → Register, wildcard → `/login` |
+| `app.config.ts` | Registers `provideHttpClient(withInterceptors([authInterceptor]))` |
+| `styles.scss` | Full design system: dark mode, glassmorphism card, gradient brand, animations |
+
+---
+
+## Verification Results
+
+```
+dotnet build   → Build succeeded in 6.2s  (0 errors, 0 warnings)
+ng build       → Application bundle generation complete (0 errors)
+```
+
+---
+
+## Running the App
+
+### 1. Start the API
+```powershell
+cd "e:\Learning Projects\AntiGravityTest1\FocusTrack.Api"
+dotnet run
+# API available at https://localhost:5001 (or http://localhost:5000)
+# OpenAPI spec: https://localhost:5001/openapi/v1.json
+```
+
+### 2. Start the Angular UI
+```powershell
+cd "e:\Learning Projects\AntiGravityTest1\focus-track-ui"
+ng serve
+# UI available at http://localhost:4200
+```
+
+### 3. Acceptance Criteria Test
+1. Navigate to `http://localhost:4200/register` → fill email + password → submit
+2. Navigate to `http://localhost:4200/login` → log in → JWT stored in localStorage
+3. Call `GET http://localhost:5000/api/test/protected` with `Authorization: Bearer <token>` → `200 OK`
+
+> [!IMPORTANT]
+> The `Jwt:Key` in `appsettings.Development.json` is a dev placeholder. Before committing or sharing, move it to **user secrets**: `dotnet user-secrets set "Jwt:Key" "your-strong-32-char-secret"`
+
+> [!NOTE]
+> The `focus-track-ui` in `AuthService` has the API base URL hardcoded to `http://localhost:5000`. This should be moved to `environment.ts` in a later phase.

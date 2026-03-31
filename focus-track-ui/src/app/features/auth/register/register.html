@@ -1,0 +1,80 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <span class="brand-icon">⏱</span>
+      <h1 class="brand-name">FocusTrack</h1>
+    </div>
+    <h2 class="auth-title">Create your account</h2>
+    <p class="auth-subtitle">Start tracking your focus sessions today</p>
+
+    @if (errorMessage()) {
+      <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
+    }
+    @if (successMessage()) {
+      <div class="alert alert--success" role="status">{{ successMessage() }}</div>
+    }
+
+    <form class="auth-form" (ngSubmit)="onSubmit()" #registerForm="ngForm">
+      <div class="form-group">
+        <label for="reg-email" class="form-label">Email address</label>
+        <input
+          id="reg-email"
+          type="email"
+          name="email"
+          class="form-input"
+          placeholder="you@example.com"
+          [(ngModel)]="email"
+          required
+          email
+          autocomplete="email"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="reg-password" class="form-label">Password</label>
+        <input
+          id="reg-password"
+          type="password"
+          name="password"
+          class="form-input"
+          placeholder="Min. 8 characters"
+          [(ngModel)]="password"
+          required
+          minlength="8"
+          autocomplete="new-password"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="reg-confirm" class="form-label">Confirm Password</label>
+        <input
+          id="reg-confirm"
+          type="password"
+          name="confirmPassword"
+          class="form-input"
+          placeholder="Repeat your password"
+          [(ngModel)]="confirmPassword"
+          required
+          autocomplete="new-password"
+        />
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn--primary"
+        [disabled]="isLoading() || registerForm.invalid"
+      >
+        @if (isLoading()) {
+          <span class="spinner"></span> Creating account...
+        } @else {
+          Create Account
+        }
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      Already have an account?
+      <a routerLink="/login" class="auth-link">Sign in</a>
+    </p>
+  </div>
+</div>

@@ -13,3 +13,6 @@ appsettings.Development.json
 *.user
 *.suo
 node_modules/
+
+# Desktop Agent Local Secrets
+agents/FocusTrack.DesktopAgent/appsettings.json

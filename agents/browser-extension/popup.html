@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; width: 320px; padding: 15px; background: #fdfdfd; margin: 0; }
+    .header { font-size: 1.2rem; font-weight: bold; text-align: center; margin-bottom: 15px; color: #4F46E5; }
+    .form-group { margin-bottom: 10px; }
+    label { font-size: 0.85rem; display: block; margin-bottom: 4px; color: #333; }
+    input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { width: 100%; padding: 10px; background-color: #4F46E5; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    button:hover { background-color: #4338CA; }
+    #message { font-size: 0.8rem; text-align: center; margin-top: 10px; color: #D97706; }
+    .success { color: #059669 !important; }
+    .error { color: #DC2626 !important; }
+  </style>
+</head>
+<body>
+  <div class="header">FocusTrack Agent</div>
+  <div id="loginSection">
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="agent@focustrack.io">
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022">
+    </div>
+    <button id="loginBtn">Authorize Agent</button>
+  </div>
+  <div id="statusSection" style="display:none; text-align: center;">
+    <p class="success">Agent acts on behalf of:</p>
+    <strong id="agentEmail"></strong>
+    <p style="margin-top:20px;"><button id="logoutBtn" style="background:#DC2626;">Deauthorize</button></p>
+  </div>
+  <div id="message"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

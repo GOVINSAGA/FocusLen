@@ -16,8 +16,9 @@ builder.Services.AddDbContext<FocusDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
            ?? "Data Source=focustrack.db"));
 
-// ─── Auth Services ───────────────────────────────────────────────────────────
+// ─── Auth & Ingestion Services ───────────────────────────────────────────────
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<ActivityIngestionService>();
 
 // ─── JWT Bearer Authentication ───────────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]

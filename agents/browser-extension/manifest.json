@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "FocusTrack Collector",
+  "version": "1.0.0",
+  "description": "Browser agent for FocusTrack. Monitors active tab duration.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": [
+    "*://*/*",
+    "http://localhost:5028/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

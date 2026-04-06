@@ -52,7 +52,7 @@ export class AuthService {
     return !!this.getToken();
   }
 
-  private storeToken(token: string): void {
+  storeToken(token: string): void {
     localStorage.setItem(TOKEN_KEY, token);
   }
 }

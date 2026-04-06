@@ -63,6 +63,26 @@ public class AuthService
         return GenerateAuthResponse(user);
     }
 
+    public async Task<AuthResponseDto> LoginWithGoogleAsync(string email)
+    {
+        var emailLower = email.ToLower();
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == emailLower);
+
+        if (user is null)
+        {
+            user = new User
+            {
+                Email = emailLower,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString())
+            };
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("New user auto-registered via Google: {Email}", email);
+        }
+
+        return GenerateAuthResponse(user);
+    }
+
     private AuthResponseDto GenerateAuthResponse(User user)
     {
         var jwtKey = _configuration["Jwt:Key"]

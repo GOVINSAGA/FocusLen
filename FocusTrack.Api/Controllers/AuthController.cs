@@ -1,5 +1,6 @@
 using FocusTrack.Api.DTOs;
 using FocusTrack.Api.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FocusTrack.Api.Controllers;
@@ -59,5 +60,28 @@ public class AuthController : ControllerBase
             _logger.LogWarning("Unauthorized login attempt: {Message}", ex.Message);
             return Unauthorized(new { error = ex.Message, statusCode = 401 });
         }
+    }
+
+    [HttpGet("google-login")]
+    public IActionResult GoogleLogin()
+    {
+        var properties = new AuthenticationProperties { RedirectUri = Url.Action("GoogleCallback") };
+        return Challenge(properties, "Google");
+    }
+
+    [HttpGet("google-callback")]
+    public async Task<IActionResult> GoogleCallback()
+    {
+        var result = await HttpContext.AuthenticateAsync("ExternalCookie");
+        if (!result.Succeeded)
+            return Unauthorized(new { error = "Google authentication failed" });
+
+        var email = result.Principal.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+        if (string.IsNullOrEmpty(email)) return BadRequest("Google login yielded no email.");
+
+        var authResponse = await _authService.LoginWithGoogleAsync(email);
+        
+        // Redirect back to frontend
+        return Redirect($"http://localhost:4200/login?token={authResponse.Token}");
     }
 }

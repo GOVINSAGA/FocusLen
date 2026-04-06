@@ -1,0 +1,70 @@
+<div class="p-6 md:p-8 lg:p-10 max-w-7xl mx-auto space-y-8 animate-fade-in">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Focus Overview</h1>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Track, analyze, and optimize your daily productivity.</p>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="flex items-center justify-center h-64">
+      <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+    </div>
+  } @else if (!hasActivity) {
+    <div class="flex flex-col items-center justify-center p-12 mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 dark:border-gray-700 animate-fade-in text-center">
+      <div class="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 rounded-full flex items-center justify-center mb-4">
+        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">No activity recorded yet</h3>
+      <p class="mt-2 text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+        Your dashboard is empty! Install and run the FocusTrack local agent to start securely capturing your focused time.
+      </p>
+    </div>
+  } @else {
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 transition-opacity duration-500" [ngClass]="{'opacity-0': loading, 'opacity-100': !loading}">
+    
+    <!-- Bar Chart -->
+    <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 dark:border-gray-700 p-6 flex flex-col hover:shadow-lg transition-shadow duration-300">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+          <div class="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
+            <svg class="w-5 h-5 text-indigo-500 dark:text-indigo-400" style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          Weekly Focus Trend
+        </h2>
+      </div>
+      <div class="flex-grow w-full h-[320px] relative" style="height: 320px; min-height: 320px; max-height: 320px;">
+        <canvas #usageChart></canvas>
+      </div>
+    </div>
+
+    <!-- Doughnut Chart -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 dark:border-gray-700 p-6 flex flex-col hover:shadow-lg transition-shadow duration-300">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+          <div class="p-2 bg-cyan-50 dark:bg-cyan-900/30 rounded-lg">
+            <svg class="w-5 h-5 text-cyan-500 dark:text-cyan-400" style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+            </svg>
+          </div>
+          Top Apps Used
+        </h2>
+      </div>
+      <div class="flex-grow w-full h-[320px] relative flex justify-center" style="height: 320px; min-height: 320px; max-height: 320px;">
+        <!-- Center Text overlay -->
+        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-[-20px]">
+           <span class="text-xs font-semibold text-gray-400 tracking-wider">TOP 5</span>
+        </div>
+        <canvas #appsChart></canvas>
+      </div>
+    </div>
+    
+  </div>
+  }
+</div>

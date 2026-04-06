@@ -1,7 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth';
 
 @Component({
@@ -11,7 +11,7 @@ import { AuthService } from '../../../core/auth/auth';
   templateUrl: './login.html',
   styleUrl: './login.scss'
 })
-export class Login {
+export class Login implements OnInit {
   email = '';
   password = '';
   isLoading = signal(false);
@@ -19,8 +19,20 @@ export class Login {
 
   constructor(
     private readonly authService: AuthService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly route: ActivatedRoute
   ) {}
+
+  ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      const token = params['token'];
+      if (token) {
+        this.isLoading.set(true);
+        this.authService.storeToken(token);
+        this.router.navigate(['/dashboard']);
+      }
+    });
+  }
 
   onSubmit(): void {
     if (!this.email || !this.password) return;

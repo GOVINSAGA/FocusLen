@@ -1,0 +1,139 @@
+# Phase 4: Smart Features — Implementation Plan
+
+## Overview
+
+This phase adds two smart layers on top of the existing FocusTrack foundation:
+1. **App Limits & Alerts** — users set a daily time cap per app; the API evaluates usage and flags breaches.
+2. **Automated Weekly Email Report** — a background Hangfire job generates and sends a weekly HTML summary via MailKit/SMTP.
+3. **Settings UI** — a new Angular page where users manage their app limits.
+
+The project is .NET 10 / SQLite (dev) and Angular 17+ standalone.
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Email Configuration**: The `WeeklyReportJob` will need a real SMTP server to deliver mail. For local development I will configure it to use **Ethereal Email** (a free fake SMTP server — https://ethereal.email). You just need to create a free account there and paste the credentials into `appsettings.Development.json`. No real emails will be sent during dev.
+
+> [!IMPORTANT]
+> **Hangfire Dashboard**: The Hangfire dashboard at `/hangfire` will be mapped **without authentication** for local dev only. Before any production deployment, it must be protected. I'll add a comment in `Program.cs` to make this clear.
+
+> [!WARNING]
+> **EF Core Migration**: The `AddSmartFeatures` migration adds the `AppLimits` table. Since we use `db.Database.EnsureCreated()` on startup (not migrations), I will switch to `db.Database.Migrate()` so the migration is applied cleanly. This is a one-time change with no data loss on SQLite dev.
+
+---
+
+## Proposed Changes
+
+### Step 1 — Schema Expansion & Rules Engine
+
+---
+
+#### [NEW] `FocusTrack.Api/Models/AppLimit.cs`
+New EF Core entity: `Id (Guid PK)`, `UserId (Guid FK → User)`, `AppName (string)`, `DailyLimitMinutes (int)`.
+
+#### [MODIFY] `FocusTrack.Api/Data/FocusDbContext.cs`
+- Add `DbSet<AppLimit> AppLimits`.
+- Configure `AppLimit` entity: PK, FK to `User` (cascade delete), index on `UserId`.
+
+#### [NEW] EF Core Migration — `AddSmartFeatures`
+Run: `dotnet ef migrations add AddSmartFeatures`
+
+#### [MODIFY] `FocusTrack.Api/Program.cs`
+Switch `db.Database.EnsureCreated()` → `db.Database.Migrate()` so the new migration is applied on startup.
+
+#### [NEW] `FocusTrack.Api/DTOs/LimitsDtos.cs`
+- `SetLimitDto`: `AppName (string)`, `DailyLimitMinutes (int)` — for POST body
+- `LimitAlertDto`: `AppName (string)`, `DailyLimitMinutes (int)`, `TodayUsageMinutes (int)`, `IsExceeded (bool)` — for GET response
+
+#### [NEW] `FocusTrack.Api/Services/LimitsService.cs`
+- `GetAlertsAsync(userId)`: reads user's `AppLimits`, joins today's session totals, returns `List<LimitAlertDto>`.
+- `SetLimitAsync(userId, dto)`: upserts the limit for the given app name.
+- `DeleteLimitAsync(userId, appName)`.
+
+#### [NEW] `FocusTrack.Api/Controllers/LimitsController.cs`
+All endpoints under `[Authorize]` and `[Route("api/limits")]`:
+- `GET /api/limits/alerts` → `LimitsService.GetAlertsAsync`
+- `GET /api/limits` → list of all configured limits for user
+- `POST /api/limits` → `LimitsService.SetLimitAsync`
+- `DELETE /api/limits/{appName}` → `LimitsService.DeleteLimitAsync`
+
+---
+
+### Step 2 — Background Jobs & Weekly Emails (.NET)
+
+---
+
+#### Install Packages
+```
+dotnet add package Hangfire.Core
+dotnet add package Hangfire.MemoryStorage
+dotnet add package MailKit
+```
+
+#### [NEW] `FocusTrack.Api/Services/EmailService.cs`
+- Uses `MailKit.Net.Smtp.SmtpClient` to send emails via config values in `appsettings`.
+- Single method: `SendAsync(to, subject, htmlBody)`.
+
+#### [NEW] `FocusTrack.Api/Services/WeeklyReportJob.cs`
+- Pulls last 7 days of sessions for each user.
+- Formats a clean HTML email with total hours focused and top 3 apps.
+- Calls `EmailService.SendAsync()`.
+
+#### [MODIFY] `FocusTrack.Api/appsettings.Development.json`
+Add `Smtp` section with `Host`, `Port`, `Username`, `Password`, `From` fields (pre-filled with Ethereal placeholders).
+
+#### [MODIFY] `FocusTrack.Api/Program.cs`
+- Register `Hangfire.MemoryStorage`.
+- Register `EmailService` and `WeeklyReportJob` as scoped services.
+- Add `app.UseHangfireDashboard()` and `app.UseHangfireServer()`.
+- Schedule recurring job: `RecurringJob.AddOrUpdate<WeeklyReportJob>("weekly-report", j => j.Execute(), Cron.Weekly)`.
+
+---
+
+### Step 3 — Frontend Settings UI (Angular)
+
+---
+
+#### [NEW] `src/app/core/limits/limits.service.ts`
+Angular service — `HttpClient` calls to `/api/limits` and `/api/limits/alerts`.
+
+#### [NEW] `src/app/features/settings/preferences/` (Component, HTML, SCSS)
+Standalone Angular component:
+- A Tailwind-styled form: text input for app name + number input for daily minutes + "Save" button.
+- A table below listing all existing limits with: App Name | Daily Limit | Today's Usage | Status badge (✅ OK / 🔴 Exceeded).
+- Delete button per row.
+
+#### [MODIFY] `src/app/app.routes.ts`
+Add route: `{ path: 'settings', component: PreferencesComponent }`.
+
+#### [MODIFY] Dashboard nav/layout
+Add a "Settings" nav link pointing to `/settings` (if a nav bar / sidebar exists).
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> **Dashboard Layout**: Does your dashboard currently have a sidebar or top navigation bar where I can add a "Settings" link? Or is the logout button the only UI element right now? This affects where I wire up the nav link.
+
+> [!IMPORTANT]
+> **SMTP Credentials**: Do you want me to pre-configure Ethereal (fake) SMTP so email testing works out of the box, or do you have a real SMTP server (e.g., Gmail, SendGrid) you want to use?
+
+---
+
+## Verification Plan
+
+### Automated
+1. Run `dotnet build` — zero errors.
+2. Run `dotnet ef migrations list` — `AddSmartFeatures` must appear as `Applied`.
+3. `POST /api/limits` with a valid JWT → 200.
+4. `GET /api/limits/alerts` → returns array with `isExceeded` correctly computed.
+5. Hangfire dashboard at `http://localhost:5028/hangfire` — weekly-report job visible.
+
+### Manual
+1. Login as a user → navigate to `/settings` → set a limit for "Visual Studio Code" → 1 minute.
+2. Navigate to dashboard → confirm the overview shows data.
+3. Call `GET /api/limits/alerts` directly — verify `isExceeded: true` for "Visual Studio Code" (since Asha has >1 minute).
+4. Trigger `WeeklyReportJob` manually from Hangfire dashboard → check Ethereal inbox.

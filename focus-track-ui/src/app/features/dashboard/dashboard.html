@@ -1,14 +1,65 @@
-<div class="p-8">
-  <div class="auth-card" style="max-width: 600px; margin: 0 auto; text-align: center;">
-    <h1 class="auth-title">Welcome to FocusTrack!</h1>
-    <p class="auth-subtitle mb-8">You have successfully logged in.</p>
+<div class="dashboard-page" style="min-height: 100vh; background: var(--color-bg); padding: 0;">
+
+  <!-- Top Nav -->
+  <header style="background: var(--color-surface); border-bottom: 1px solid var(--color-border); position: sticky; top: 0; z-index: 10;">
+    <div style="max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; height: 64px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 1.5rem;">
+        <span class="brand-name" style="font-size: 1.1rem;">⏱ FocusTrack</span>
+        <nav style="display: flex; gap: 0.25rem;">
+          <a routerLink="/dashboard"
+             style="padding: 0.4rem 0.75rem; border-radius: 8px; font-size: 0.875rem; font-weight: 500; background: var(--color-primary); color: #fff; text-decoration: none;">
+            Dashboard
+          </a>
+          <a routerLink="/settings"
+             style="padding: 0.4rem 0.75rem; border-radius: 8px; font-size: 0.875rem; font-weight: 500; color: var(--color-text-muted); text-decoration: none; transition: background 0.2s;"
+             onmouseover="this.style.background='rgba(255,255,255,0.06)'"
+             onmouseout="this.style.background='transparent'">
+            Settings
+          </a>
+        </nav>
+      </div>
+      <button class="btn" style="margin-top: 0; padding: 0.4rem 1rem; font-size: 0.875rem; background: var(--color-surface-elevated); color: var(--color-text); border: 1px solid var(--color-border); box-shadow: none;" (click)="logout()">
+        Sign Out
+      </button>
+    </div>
+  </header>
+
+  <div style="max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem;">
+
+
+  @if (isLoading()) {
+    <div style="display: flex; justify-content: center; padding: 4rem;">
+      <span class="spinner" style="width: 40px; height: 40px; border-width: 4px;"></span>
+    </div>
+  } @else {
     
-    <div class="alert alert--success mb-8">
-      Your session JWT has been stored and successfully validated.
+    @if (errorMessage()) {
+      <div class="alert alert--error">{{ errorMessage() }}</div>
+    }
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem;">
+      
+      <!-- Top Apps Doughnut Chart -->
+      <div class="auth-card" style="max-width: none; height: 400px; padding: 1.5rem; display: flex; flex-direction: column;">
+        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">Top Focus Drivers</h3>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1.5rem;">Most used applications based on total active screen time (Minutes).</p>
+        <div style="flex-grow: 1; position: relative;">
+          <canvas #topAppsChartCanvas></canvas>
+        </div>
+      </div>
+
+      <!-- Last 7 Days Bar Chart -->
+      <div class="auth-card" style="max-width: none; height: 400px; padding: 1.5rem; display: flex; flex-direction: column;">
+        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">Daily Screen Time</h3>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1.5rem;">Total tracked minutes over the last 7 days.</p>
+        <div style="flex-grow: 1; position: relative;">
+          <canvas #dailyChartCanvas></canvas>
+        </div>
+      </div>
+
     </div>
 
-    <button class="btn btn--primary" (click)="logout()">
-      Sign Out
-    </button>
-  </div>
-</div>
+  }
+
+  </div><!-- /content wrapper -->
+</div><!-- /dashboard-page -->

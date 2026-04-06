@@ -1,0 +1,14 @@
+- `[x]` 1. Backend Analytics (.NET)
+    - `[x]` Create `FocusTrack.Api/DTOs/AnalyticsDtos.cs`
+    - `[x]` Create `FocusTrack.Api/Services/AnalyticsService.cs`
+    - `[x]` Create `FocusTrack.Api/Controllers/AnalyticsController.cs`
+- `[x]` 2. Frontend Analytics Dashboard (Angular)
+    - `[x]` Use native `chart.js` (skipped `ng2-charts` due to version conflict)
+    - `[x]` Create `src/app/core/analytics/analytics.service.ts`
+    - `[x]` Create `src/app/features/dashboard/overview` component (HTML/TS/CSS)
+    - `[x]` Update `src/app/app.routes.ts` to map `/dashboard` to `OverviewComponent`
+- `[x]` 3. Google OAuth Integration (Backend & Frontend)
+    - `[x]` Install `Microsoft.AspNetCore.Authentication.Google` NuGet package
+    - `[x]` Configure Google Authentication in `FocusTrack.Api/Program.cs`
+    - `[x]` Add Google Login/Callback endpoints in `FocusTrack.Api/Controllers/AuthController.cs`
+    - `[x]` Update `src/app/features/auth/login/login.component.html` and `.ts` with Google button

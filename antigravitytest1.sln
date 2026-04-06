@@ -1,0 +1,35 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FocusTrack.Api", "FocusTrack.Api\FocusTrack.Api.csproj", "{CCF1F0E6-D458-29EB-A93B-319DF4E7DAC3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "agents", "agents", "{B33F7F66-95C7-97AE-2462-F6D15419E3EF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FocusTrack.DesktopAgent", "agents\FocusTrack.DesktopAgent\FocusTrack.DesktopAgent.csproj", "{6C083828-20B7-C815-4937-7C5CEAF65F40}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CCF1F0E6-D458-29EB-A93B-319DF4E7DAC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCF1F0E6-D458-29EB-A93B-319DF4E7DAC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCF1F0E6-D458-29EB-A93B-319DF4E7DAC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCF1F0E6-D458-29EB-A93B-319DF4E7DAC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C083828-20B7-C815-4937-7C5CEAF65F40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C083828-20B7-C815-4937-7C5CEAF65F40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C083828-20B7-C815-4937-7C5CEAF65F40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C083828-20B7-C815-4937-7C5CEAF65F40}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6C083828-20B7-C815-4937-7C5CEAF65F40} = {B33F7F66-95C7-97AE-2462-F6D15419E3EF}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F10F20A2-1F5B-4DB4-A4EA-F0ABCA84F8ED}
+	EndGlobalSection
+EndGlobal

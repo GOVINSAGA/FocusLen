@@ -1,116 +1,74 @@
-# FocusTrack – Phase 1: Foundation & Auth
+# FocusTrack – Phase 3: Dashboard & Analytics
 
 ## Overview
-
-Bootstrap the **FocusTrack** application from scratch. This phase delivers:
-- A **.NET 8 Web API** backend (`FocusTrack.Api`) with EF Core + Oracle provider, JWT Bearer auth, and BCrypt password hashing.
-- An **Angular 17+ standalone** frontend (`focus-track-ui`) with login/register components, an `AuthService`, and a JWT HTTP interceptor.
-
-The end result is a fully working register → login → JWT-protected endpoint flow.
+This phase introduces data visualization and third-party authentication. We will build a backend analytics engine to aggregate session data, an Angular dashboard utilizing `Chart.js` for dynamic visualization, and integrate Google OAuth into the existing `.NET` JWT pipeline.
 
 ---
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **Oracle EF Core Provider**: The workflow specifies `Oracle.EntityFrameworkCore`. This requires an **Oracle Database** instance (on-prem or OCI). During Phase 1 the connection string will be a placeholder; no migrations or actual DB calls will be attempted. Confirm this is acceptable, or indicate if you want to swap to SQLite/SQL Server for local dev.
-
-> [!IMPORTANT]
-> **JWT Secret**: Per security rules, the JWT signing key will be read from environment variables / `appsettings.Development.json` (not hardcoded). You will need to set the `Jwt:Key` environment variable or add it to your local secrets before the API can issue tokens.
+> **Google OAuth Credentials**: Step 3 requires a Google **Client ID** and **Client Secret**. I will set up the backend logic and put placeholder values in `appsettings.Development.json`. You will need to create dummy or real credentials in the [Google Cloud Console](https://console.cloud.google.com/) and paste them into your config for the "Login with Google" button to actually work during verification.
 
 > [!WARNING]
-> **Angular version**: The workflow uses `--standalone true`. This requires **Angular CLI v17+**. The plan assumes `@angular/cli` v17 or v18 is globally installed. The `ng` commands will be run inside `e:\Learning Projects\AntiGravityTest1\focus-track-ui\`.
+> **Chart.js vs ng2-charts**: Angular 17+ standalone components sometimes have strict dependency requirements for wrapper libraries like `ng2-charts`. If we encounter version conflicts, I will use native `Chart.js` directly within Angular `OnInit`/`ViewChild`, which is perfectly stable.
 
 ---
 
 ## Proposed Changes
 
-### Backend – `FocusTrack.Api`
+### 1. Backend Analytics (.NET)
 
-#### [NEW] `FocusTrack.Api/` (dotnet webapi project)
-Scaffolded via `dotnet new webapi -n FocusTrack.Api --use-controllers`.
+#### [NEW] `FocusTrack.Api/DTOs/AnalyticsDtos.cs`
+Defines `DailyUsageDto` (Date, TotalSeconds) and `TopAppDto` (AppName, TotalDurationSeconds).
 
-#### [NEW] `FocusTrack.Api/Models/User.cs`
-```csharp
-public class User {
-    Guid Id, string Email, string PasswordHash, DateTime CreatedAt
-}
-```
+#### [NEW] `FocusTrack.Api/Services/AnalyticsService.cs`
+Implements raw EF Core LINQ grouping:
+- **GetDailyUsage(userId, daysBack)**: Groups `Sessions` by the Date component of `StartTime` over the last `N` days. 
+- **GetTopApps(userId, limit)**: Groups by `AppName`, sums the durations (EndTime - StartTime), and returns the top `N`.
 
-#### [NEW] `FocusTrack.Api/Models/Session.cs`
-```csharp
-public class Session {
-    Guid Id, Guid UserId, string AppName, string WindowTitle,
-    DateTime StartTime, DateTime EndTime, bool IsBrowser
-}
-```
-
-#### [NEW] `FocusTrack.Api/Data/FocusDbContext.cs`
-EF Core `DbContext` with `DbSet<User>` and `DbSet<Session>`.
-
-#### [MODIFY] `FocusTrack.Api/Program.cs`
-- Register `FocusDbContext` with Oracle provider (placeholder connection string from config).
-- Configure JWT Bearer middleware.
-- Add `AddControllers()` / `MapControllers()`.
-
-#### [NEW] `FocusTrack.Api/Services/AuthService.cs`
-- `RegisterAsync(email, password)` — checks for existing user, hashes password with BCrypt, saves to DB.
-- `LoginAsync(email, password)` — validates credentials, returns a signed JWT.
-
-#### [NEW] `FocusTrack.Api/Controllers/AuthController.cs`
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-
-#### [NEW] `FocusTrack.Api/Controllers/TestController.cs`
-- `GET /api/test/protected` — decorated with `[Authorize]` for acceptance-criteria validation.
-
-#### [NEW] `FocusTrack.Api/DTOs/` folder
-- `RegisterDto.cs` — `Email`, `Password`
-- `LoginDto.cs` — `Email`, `Password`
-- `AuthResponseDto.cs` — `Token`, `ExpiresAt`
+#### [NEW] `FocusTrack.Api/Controllers/AnalyticsController.cs`
+Exposes `GET /api/analytics/daily` and `GET /api/analytics/top-apps` protected by `[Authorize]`. Injects `AnalyticsService`.
 
 ---
 
-### Frontend – `focus-track-ui`
+### 2. Frontend Analytics Dashboard (Angular)
 
-#### [NEW] `focus-track-ui/` (Angular 17+ standalone project)
-Scaffolded via `ng new focus-track-ui --standalone true --routing true --style scss`.
+#### [MODIFY] `package.json`
+Execute `npm install chart.js ng2-charts`.
 
-#### [NEW] `focus-track-ui/src/app/features/auth/login/`
-Login component generated via Angular CLI.
+#### [NEW] `src/app/core/analytics/analytics.ts`
+Angular Service to `HttpClient.get()` the backend `/api/analytics/*` endpoints.
 
-#### [NEW] `focus-track-ui/src/app/features/auth/register/`
-Register component generated via Angular CLI.
+#### [NEW] `src/app/features/dashboard/overview/`
+The actual reporting view.
+- Contains a visually stunning grid layout using Tailwind.
+- Renders a **Bar Chart** mapping out the last 7 days of raw tracking.
+- Renders a **Doughnut/Pie Chart** showing the user's top 5 most used apps.
 
-#### [NEW] `focus-track-ui/src/app/core/auth/auth.service.ts`
-Service wrapping `HttpClient` calls to `/api/auth/register` and `/api/auth/login`. Stores JWT in `localStorage`.
+#### [MODIFY] `src/app/app.routes.ts`
+Route `/dashboard` point to `OverviewComponent` instead of the generic placeholder we built in Phase 2.
 
-#### [MODIFY] `focus-track-ui/src/app/app.routes.ts`
-Maps `/login` → `LoginComponent` and `/register` → `RegisterComponent`.
+---
 
-#### [NEW] `focus-track-ui/src/app/core/interceptors/auth.interceptor.ts`
-HTTP interceptor that reads the JWT from `localStorage` and attaches it as a `Bearer` token on every outgoing request.
+### 3. Google OAuth Integration
+
+#### [MODIFY] `FocusTrack.Api.csproj`
+Add package: `Microsoft.AspNetCore.Authentication.Google`.
+
+#### [MODIFY] `FocusTrack.Api/Program.cs`
+Inject `.AddGoogle(options => ...)` into the authentication builder.
+
+#### [MODIFY] `FocusTrack.Api/Controllers/AuthController.cs`
+Add a dedicated endpoint for issuing a Google OAuth challenge, and a callback endpoint `GET /api/auth/google-callback`.
+If the user's email doesn't exist in `Users`, we automatically create a new account for them. We then issue our standard FocusTrack JWT so the rest of the app's interceptors work perfectly.
+
+#### [MODIFY] `src/app/features/auth/login/login.html` & `.ts`
+Add a polished "Sign in with Google" button beneath the traditional login form. Clicking this will redirect the browser directly to `http://localhost:5028/api/auth/google-login`.
 
 ---
 
 ## Open Questions
 
-> [!IMPORTANT]
-> 1. **Oracle DB**: Do you have an Oracle instance available, or should I configure a **SQLite** fallback for local development so migrations can actually run during Phase 1?
-> 2. **Angular CLI**: Do you have `@angular/cli` installed globally (`ng --version`)? If not, I can use `npx @angular/cli` instead.
-> 3. **CORS**: The Angular dev server runs on `localhost:4200` and the API on (typically) `localhost:5XXX`. Should I wire up a CORS policy in the API to allow this origin during development?
-
----
-
-## Verification Plan
-
-### Automated
-- `dotnet build` must succeed with zero errors.
-- `ng build --configuration development` must succeed.
-
-### Manual
-1. Start API: `dotnet run --project FocusTrack.Api`
-2. Start UI: `ng serve` inside `focus-track-ui/`
-3. Navigate to `http://localhost:4200/register` → fill form → submit.
-4. Navigate to `http://localhost:4200/login` → fill form → receive JWT in browser storage.
-5. Use the JWT to hit `GET /api/test/protected` and confirm `200 OK`.
+1. **Angular Dashboard Routing**: Right now, `/dashboard` is a blank page that just has a "Logout" button. I will convert it to be the `OverviewComponent` hosting the charts. Are you okay with the charts being the main `/dashboard` landing page?
+2. **Google OAuth Config**: To make Google Login work locally, we need to provide a redirect URI to Google. I'll configure `.NET` to use `http://localhost:5028/signin-google`. Is `5028` still the exact port your API is running on locally?
